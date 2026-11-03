@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⛴️ 新渡輪船期極速查 (長洲 / 梅窩 / 中環)</title>
+    <style>
+        :root {
+            --bg-dark: #0F172A;
+            --bg-card: #1E293B;
+            --primary: #38BDF8;
+            --primary-glow: rgba(56, 189, 248, 0.25);
+            --accent-gold: #FBBF24;
+            --accent-green: #10B981;
+            --accent-orange: #F97316;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.12), transparent 45%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding-bottom: 50px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 460px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        /* 頂部標題與時鐘 */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-left h2 {
+            margin: 0;
+            font-size: 21px;
+            color: var(--primary);
+            letter-spacing: 0.5px;
+        }
+        .header-left p {
+            margin: 2px 0 0 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .live-clock {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--accent-gold);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 三航線切換 Tabs */
+        .route-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            background: var(--bg-card);
+            padding: 4px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            gap: 4px;
+        }
+        .route-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 4px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            line-height: 1.3;
+        }
+        .route-tab.active {
+            background: var(--primary);
+            color: #0F172A;
+            box-shadow: 0 2px 12px var(--primary-glow);
+        }
+
+        /* 方向與日子控制卡 */
+        .control-card {
+            background: var(--bg-card);
+            border-radius: 18px;
+            padding: 14px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .direction-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 10px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        .port-name {
+            font-size: 17px;
+            font-weight: 900;
+            color: var(--text-main);
+            flex: 1;
+            text-align: center;
+        }
+        .swap-btn {
+            background: rgba(56, 189, 248, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            color: var(--primary);
+            width: 42px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .swap-btn:active { transform: rotate(180deg) scale(0.92); }
+
+        .day-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            gap: 6px;
+        }
+        .day-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 9px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            text-align: center;
+        }
+        .day-btn.active {
+            background: rgba(251, 191, 36, 0.15);
+            border-color: var(--accent-gold);
+            color: var(--accent-gold);
+        }
+
+        /* 下一班船實時倒數雷達卡 */
+        .radar-card {
+            background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+            border-radius: 20px;
+            padding: 18px;
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .radar-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .radar-badge {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.15);
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .next-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+        .next-time-big {
+            font-size: 40px;
+            font-weight: 900;
+            color: #FFFFFF;
+            letter-spacing: -0.5px;
+            font-variant-numeric: tabular-nums;
+        }
+        .countdown-box {
+            text-align: right;
+        }
+        .countdown-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+        }
+        .countdown-val {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--accent-gold);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .upcoming-row {
+            display: flex;
+            gap: 8px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.12);
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .upcoming-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .upcoming-pill {
+            background: rgba(255, 255, 255, 0.07);
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        /* 時段篩選與時間表網格 */
+        .schedule-card {
+            background: var(--bg-card);
+            border-radius: 18px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+        .filter-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .period-tabs {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .period-btn {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .period-btn.active {
+            background: var(--primary);
+            color: #0F172A;
+            border-color: var(--primary);
+        }
+        .toggle-past-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .time-cell {
+            background: rgba(0, 0, 0, 0.28);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 6px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            position: relative;
+            transition: all 0.2s;
+        }
+        .time-cell.past {
+            opacity: 0.35;
+        }
+        .time-cell.next-highlight {
+            background: rgba(251, 191, 36, 0.18);
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
+            transform: scale(1.02);
+        }
+        .t-main {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-main);
+            font-variant-numeric: tabular-nums;
+        }
+        .t-sub {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+        .t-tag {
+            font-size: 10px;
+            padding: 1px 5px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .t-tag.sat-only {
+            background: rgba(249, 115, 22, 0.2);
+            color: #FB923C;
+        }
+        .t-tag.monfri-only {
+            background: rgba(56, 189, 248, 0.2);
+            color: #38BDF8;
+        }
+        .t-tag.pier5-tag {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34D399;
+        }
+        .t-tag.next-tag {
+            background: var(--accent-gold);
+            color: #0F172A;
+        }
+
+        /* 船費與備註區 */
+        .fare-card {
+            background: var(--bg-card);
+            border-radius: 18px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+        .fare-title {
+            font-size: 15px;
+            font-weight: 800;
+            margin: 0 0 12px 0;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .fare-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .fare-table th, .fare-table td {
+            padding: 8px 6px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+        .fare-table th {
+            color: var(--text-muted);
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.2);
+        }
+        .fare-table td:first-child {
+            text-align: left;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+        .fare-note {
+            font-size: 11px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 頂部欄 -->
+    <div class="header">
+        <div class="header-left">
+            <h2>⛴️ 新渡輪船期極速查</h2>
+            <p id="effectiveNote">中環⇄長洲 (2026年4月1日起生效)</p>
+        </div>
+        <div class="live-clock" id="liveClock">--:--:--</div>
+    </div>
+
+    <!-- 航線切換 (三航線) -->
+    <div class="route-tabs">
+        <button class="route-tab active" id="tabRouteCC" onclick="switchRoute('CENTRAL_CC')">⛴️ 中環 ⇄ 長洲</button>
+        <button class="route-tab" id="tabRouteCMW" onclick="switchRoute('CENTRAL_MW')">⛴️ 中環 ⇄ 梅窩</button>
+        <button class="route-tab" id="tabRouteMW" onclick="switchRoute('CC_MUIWO')">🛥️ 長洲 ⇄ 梅窩<br><span style="font-size:10px; font-weight:normal;">(橫水渡)</span></button>
+    </div>
+
+    <!-- 方向與日子控制 -->
+    <div class="control-card">
+        <div class="direction-box">
+            <div class="port-name" id="fromPortText">中環</div>
+            <button class="swap-btn" onclick="swapDirection()" title="切換方向">⇄</button>
+            <div class="port-name" id="toPortText">長洲</div>
+        </div>
+
+        <div class="day-selector">
+            <button class="day-btn" id="dayBtnWeekday" onclick="setDayType('WEEKDAY')">星期一至五</button>
+            <button class="day-btn" id="dayBtnSat" onclick="setDayType('SAT')">星期六</button>
+            <button class="day-btn" id="dayBtnHoliday" onclick="setDayType('HOLIDAY')">星期日及公眾假期</button>
+        </div>
+    </div>
+
+    <!-- 下一班船實時雷達 -->
+    <div class="radar-card">
+        <div class="radar-top">
+            <span class="radar-badge">
+                <span class="pulse-dot"></span>
+                <span id="radarStatusText">下一班即將開出</span>
+            </span>
+            <span style="font-size:12px; color:var(--text-muted);" id="radarRouteLabel">由 中環 開出</span>
+        </div>
+
+        <div class="next-main">
+            <div>
+                <div class="next-time-big" id="nextSailTime">--:--</div>
+                <div style="font-size:12px; color:var(--text-muted);" id="nextSailSub">--</div>
+            </div>
+            <div class="countdown-box">
+                <span class="countdown-label">距離開船尚餘</span>
+                <span class="countdown-val" id="nextCountdown">-- 分鐘</span>
+            </div>
+        </div>
+
+        <div class="upcoming-row">
+            <span class="upcoming-label">⏭️ 後續班次：</span>
+            <div id="subsequentList" style="display:flex; gap:6px; flex-wrap:wrap;"></div>
+        </div>
+    </div>
+
+    <!-- 全日班次時間表 -->
+    <div class="schedule-card">
+        <div class="filter-row">
+            <div class="period-tabs">
+                <button class="period-btn active" onclick="setPeriod('ALL', this)">全部</button>
+                <button class="period-btn" onclick="setPeriod('AM', this)">🌅 早上</button>
+                <button class="period-btn" onclick="setPeriod('PM', this)">☀️ 下午</button>
+                <button class="period-btn" onclick="setPeriod('NIGHT', this)">🌙 晚上</button>
+            </div>
+            <button class="toggle-past-btn" id="togglePastBtn" onclick="toggleShowPast()">👁️ 隱藏已過班次</button>
+        </div>
+
+        <div class="time-grid" id="timeGrid"></div>
+    </div>
+
+    <!-- 收費表 -->
+    <div class="fare-card" id="fareSection"></div>
+</div>
+
+<script>
+    // ================= 船期資料庫 (2026年官方班次表) =================
+
+    // 1. 中環 ⇄ 長洲 (2026年4月1日起生效)
+    const scheduleCentralCC = {
+        centralToCC_MonSat: [
+            { t: "01:30", label: "1:30 am" },
+            { t: "04:15", label: "4:15 am" },
+            { t: "06:10", label: "6:10 am" },
+            { t: "07:00", label: "7:00 am" },
+            { t: "07:40", label: "7:40 am" },
+            { t: "08:00", label: "8:00 am" },
+            { t: "08:40", label: "8:40 am" },
+            { t: "09:00", label: "9:00 am" },
+            { t: "09:45", label: "9:45 am" },
+            { t: "10:15", label: "10:15 am" },
+            { t: "10:45", label: "10:45 am" },
+            { t: "11:15", label: "11:15 am" },
+            { t: "11:45", label: "11:45 am" },
+            { t: "12:15", label: "12:15 pm" },
+            { t: "12:45", label: "12:45 pm" },
+            { t: "13:15", label: "1:15 pm" },
+            { t: "13:45", label: "1:45 pm" },
+            { t: "14:15", label: "2:15 pm" },
+            { t: "14:45", label: "2:45 pm" },
+            { t: "15:15", label: "3:15 pm" },
+            { t: "15:45", label: "3:45 pm" },
+            { t: "16:15", label: "4:15 pm" },
+            { t: "16:45", label: "4:45 pm" },
+            { t: "17:20", label: "5:20 pm" },
+            { t: "17:40", label: "5:40 pm" },
+            { t: "18:00", label: "6:00 pm" },
+            { t: "18:20", label: "6:20 pm" },
+            { t: "18:30", label: "6:30 pm" },
+            { t: "18:45", label: "6:45 pm" },
+            { t: "19:00", label: "7:00 pm" },
+            { t: "19:15", label: "7:15 pm" },
+            { t: "19:30", label: "7:30 pm", only: "SAT", note: "只限星期六" },
+            { t: "19:40", label: "7:40 pm" },
+            { t: "20:00", label: "8:00 pm" },
+            { t: "20:30", label: "8:30 pm" },
+            { t: "21:00", label: "9:00 pm" },
+            { t: "21:30", label: "9:30 pm" },
+            { t: "22:00", label: "10:00 pm" },
+            { t: "22:30", label: "10:30 pm" },
+            { t: "23:00", label: "11:00 pm" },
+            { t: "23:30", label: "11:30 pm" },
+            { t: "23:45", label: "11:45 pm" },
+            { t: "00:30", label: "12:30 am", nextDayMidnight: true }
+        ],
+        centralToCC_Holiday: [
+            { t: "01:30", label: "1:30 am" },
+            { t: "04:15", label: "4:15 am" },
+            { t: "06:30", label: "6:30 am" },
+            { t: "07:00", label: "7:00 am" },
+            { t: "07:30", label: "7:30 am" },
+            { t: "08:00", label: "8:00 am" },
+            { t: "08:30", label: "8:30 am" },
+            { t: "09:00", label: "9:00 am" },
+            { t: "09:30", label: "9:30 am" },
+            { t: "10:00", label: "10:00 am" },
+            { t: "10:30", label: "10:30 am" },
+            { t: "11:00", label: "11:00 am" },
+            { t: "11:30", label: "11:30 am" },
+            { t: "12:00", label: "12:00 nn" },
+            { t: "12:30", label: "12:30 pm" },
+            { t: "13:00", label: "1:00 pm" },
+            { t: "13:30", label: "1:30 pm" },
+            { t: "14:00", label: "2:00 pm" },
+            { t: "14:30", label: "2:30 pm" },
+            { t: "15:00", label: "3:00 pm" },
+            { t: "15:30", label: "3:30 pm" },
+            { t: "16:00", label: "4:00 pm" },
+            { t: "16:30", label: "4:30 pm" },
+            { t: "17:00", label: "5:00 pm" },
+            { t: "17:30", label: "5:30 pm" },
+            { t: "18:00", label: "6:00 pm" },
+            { t: "18:30", label: "6:30 pm" },
+            { t: "19:00", label: "7:00 pm" },
+            { t: "19:30", label: "7:30 pm" },
+            { t: "20:00", label: "8:00 pm" },
+            { t: "20:30", label: "8:30 pm" },
+            { t: "21:00", label: "9:00 pm" },
+            { t: "21:30", label: "9:30 pm" },
+            { t: "22:00", label: "10:00 pm" },
+            { t: "22:30", label: "10:30 pm" },
+            { t: "23:00", label: "11:00 pm" },
+            { t: "23:30", label: "11:30 pm" },
+            { t: "23:55", label: "11:55 pm" },
+            { t: "00:30", label: "12:30 am", nextDayMidnight: true }
+        ],
+        ccToCentral_MonSat: [
+            { t: "02:20", label: "2:20 am" },
+            { t: "05:10", label: "5:10 am" },
+            { t: "05:50", label: "5:50 am" },
+            { t: "06:20", label: "6:20 am" },
+            { t: "06:40", label: "6:40 am" },
+            { t: "07:00", label: "7:00 am" },
+            { t: "07:15", label: "7:15 am" },
+            { t: "07:45", label: "7:45 am" },
+            { t: "07:50", label: "7:50 am" },
+            { t: "07:55", label: "7:55 am" },
+            { t: "08:10", label: "8:10 am" },
+            { t: "08:20", label: "8:20 am" },
+            { t: "08:40", label: "8:40 am" },
+            { t: "09:00", label: "9:00 am" },
+            { t: "09:30", label: "9:30 am" },
+            { t: "10:00", label: "10:00 am" },
+            { t: "10:45", label: "10:45 am" },
+            { t: "11:15", label: "11:15 am" },
+            { t: "11:45", label: "11:45 am" },
+            { t: "12:15", label: "12:15 pm" },
+            { t: "12:45", label: "12:45 pm" },
+            { t: "13:15", label: "1:15 pm" },
+            { t: "13:45", label: "1:45 pm" },
+            { t: "14:15", label: "2:15 pm" },
+            { t: "14:45", label: "2:45 pm" },
+            { t: "15:15", label: "3:15 pm" },
+            { t: "15:45", label: "3:45 pm" },
+            { t: "16:15", label: "4:15 pm" },
+            { t: "16:30", label: "4:30 pm" },
+            { t: "16:45", label: "4:45 pm" },
+            { t: "17:15", label: "5:15 pm" },
+            { t: "17:40", label: "5:40 pm" },
+            { t: "18:20", label: "6:20 pm" },
+            { t: "19:00", label: "7:00 pm" },
+            { t: "19:30", label: "7:30 pm" },
+            { t: "20:00", label: "8:00 pm" },
+            { t: "20:30", label: "8:30 pm" },
+            { t: "21:00", label: "9:00 pm" },
+            { t: "21:30", label: "9:30 pm" },
+            { t: "22:00", label: "10:00 pm" },
+            { t: "22:30", label: "10:30 pm" },
+            { t: "23:00", label: "11:00 pm" },
+            { t: "23:30", label: "11:30 pm" },
+            { t: "23:45", label: "11:45 pm" }
+        ],
+        ccToCentral_Holiday: [
+            { t: "02:20", label: "2:20 am" },
+            { t: "05:10", label: "5:10 am" },
+            { t: "06:00", label: "6:00 am" },
+            { t: "06:30", label: "6:30 am" },
+            { t: "07:00", label: "7:00 am" },
+            { t: "07:30", label: "7:30 am" },
+            { t: "08:00", label: "8:00 am" },
+            { t: "08:30", label: "8:30 am" },
+            { t: "09:00", label: "9:00 am" },
+            { t: "09:30", label: "9:30 am" },
+            { t: "10:00", label: "10:00 am" },
+            { t: "10:30", label: "10:30 am" },
+            { t: "11:00", label: "11:00 am" },
+            { t: "11:30", label: "11:30 am" },
+            { t: "12:00", label: "12:00 nn" },
+            { t: "12:30", label: "12:30 pm" },
+            { t: "13:00", label: "1:00 pm" },
+            { t: "13:30", label: "1:30 pm" },
+            { t: "14:00", label: "2:00 pm" },
+            { t: "14:30", label: "2:30 pm" },
+            { t: "15:00", label: "3:00 pm" },
+            { t: "15:30", label: "3:30 pm" },
+            { t: "16:00", label: "4:00 pm" },
+            { t: "16:30", label: "4:30 pm" },
+            { t: "17:00", label: "5:00 pm" },
+            { t: "17:30", label: "5:30 pm" },
+            { t: "18:00", label: "6:00 pm" },
+            { t: "18:30", label: "6:30 pm" },
+            { t: "19:00", label: "7:00 pm" },
+            { t: "19:30", label: "7:30 pm" },
+            { t: "20:00", label: "8:00 pm" },
+            { t: "20:30", label: "8:30 pm" },
+            { t: "21:00", label: "9:00 pm" },
+            { t: "21:30", label: "9:30 pm" },
+            { t: "22:00", label: "10:00 pm" },
+            { t: "22:30", label: "10:30 pm" },
+            { t: "23:00", label: "11:00 pm" },
+            { t: "23:30", label: "11:30 pm" }
+        ]
+    };
+
+    // 2. 中環 ⇄ 梅窩 高速船服務 (2026年8月10日起生效)
+    const scheduleCentralMW = {
+        // 由中環開 (星期一至六，公眾假期除外)
+        centralToMW_MonSat: [
+            { t: "03:00", label: "3:00 am", pier5: true, note: "中環5號碼頭開" },
+            { t: "06:10", label: "6:10 am" },
+            { t: "07:00", label: "7:00 am" },
+            { t: "07:40", label: "7:40 am" },
+            { t: "08:30", label: "8:30 am" },
+            { t: "09:00", label: "9:00 am" },
+            { t: "09:50", label: "9:50 am" },
+            { t: "10:30", label: "10:30 am" },
+            { t: "11:10", label: "11:10 am" },
+            { t: "11:50", label: "11:50 am" },
+            { t: "12:30", label: "12:30 pm" },
+            { t: "13:10", label: "1:10 pm" },
+            { t: "13:50", label: "1:50 pm" },
+            { t: "14:30", label: "2:30 pm" },
+            { t: "15:10", label: "3:10 pm" },
+            { t: "15:50", label: "3:50 pm" },
+            { t: "16:30", label: "4:30 pm" },
+            { t: "17:20", label: "5:20 pm" },
+            { t: "17:40", label: "5:40 pm" },
+            { t: "18:00", label: "6:00 pm" },
+            { t: "18:30", label: "6:30 pm" },
+            { t: "19:00", label: "7:00 pm" },
+            { t: "19:30", label: "7:30 pm" },
+            { t: "20:00", label: "8:00 pm" },
+            { t: "20:40", label: "8:40 pm" },
+            { t: "21:20", label: "9:20 pm" },
+            { t: "22:00", label: "10:00 pm" },
+            { t: "22:45", label: "10:45 pm" },
+            { t: "23:30", label: "11:30 pm" },
+            { t: "00:30", label: "12:30 am", nextDayMidnight: true }
+        ],
+        // 由中環開 (星期日及公眾假期)
+        centralToMW_Holiday: [
+            { t: "03:00", label: "3:00 am", pier5: true, note: "中環5號碼頭開" },
+            { t: "07:00", label: "7:00 am" },
+            { t: "08:00", label: "8:00 am" },
+            { t: "08:30", label: "8:30 am" },
+            { t: "09:00", label: "9:00 am" },
+            { t: "09:40", label: "9:40 am" },
+            { t: "10:20", label: "10:20 am" },
+            { t: "11:00", label: "11:00 am" },
+            { t: "12:00", label: "12:00 nn" },
+            { t: "13:00", label: "1:00 pm" },
+            { t: "13:40", label: "1:40 pm" },
+            { t: "14:20", label: "2:20 pm" },
+            { t: "15:00", label: "3:00 pm" },
+            { t: "15:40", label: "3:40 pm" },
+            { t: "16:20", label: "4:20 pm" },
+            { t: "17:00", label: "5:00 pm" },
+            { t: "17:40", label: "5:40 pm" },
+            { t: "18:20", label: "6:20 pm" },
+            { t: "19:00", label: "7:00 pm" },
+            { t: "19:40", label: "7:40 pm" },
+            { t: "20:20", label: "8:20 pm" },
+            { t: "21:00", label: "9:00 pm" },
+            { t: "21:40", label: "9:40 pm" },
+            { t: "22:20", label: "10:20 pm" },
+            { t: "23:00", label: "11:00 pm" },
+            { t: "23:40", label: "11:40 pm" },
+            { t: "00:30", label: "12:30 am", nextDayMidnight: true }
+        ],
+        // 由梅窩開 (星期一至六，公眾假期除外)
+        mwToCentral_MonSat: [
+            { t: "03:40", label: "3:40 am" },
+            { t: "05:55", label: "5:55 am" },
+            { t: "06:20", label: "6:20 am" },
+            { t: "06:50", label: "6:50 am" },
+            { t: "07:15", label: "7:15 am" },
+            { t: "07:45", label: "7:45 am" },
+            { t: "08:05", label: "8:05 am" },
+            { t: "08:30", label: "8:30 am" },
+            { t: "09:00", label: "9:00 am" },
+            { t: "09:30", label: "9:30 am" },
+            { t: "10:00", label: "10:00 am" },
+            { t: "10:40", label: "10:40 am" },
+            { t: "11:30", label: "11:30 am" },
+            { t: "12:10", label: "12:10 pm" },
+            { t: "12:50", label: "12:50 pm" },
+            { t: "13:30", label: "1:30 pm" },
+            { t: "14:10", label: "2:10 pm" },
+            { t: "14:50", label: "2:50 pm" },
+            { t: "15:30", label: "3:30 pm" },
+            { t: "16:10", label: "4:10 pm" },
+            { t: "16:50", label: "4:50 pm" },
+            { t: "17:30", label: "5:30 pm" },
+            { t: "18:10", label: "6:10 pm" },
+            { t: "18:40", label: "6:40 pm" },
+            { t: "19:40", label: "7:40 pm" },
+            { t: "20:30", label: "8:30 pm" },
+            { t: "21:30", label: "9:30 pm" },
+            { t: "22:40", label: "10:40 pm" },
+            { t: "23:30", label: "11:30 pm" }
+        ],
+        // 由梅窩開 (星期日及公眾假期)
+        mwToCentral_Holiday: [
+            { t: "03:40", label: "3:40 am" },
+            { t: "06:20", label: "6:20 am" },
+            { t: "07:05", label: "7:05 am" },
+            { t: "08:00", label: "8:00 am" },
+            { t: "08:40", label: "8:40 am" },
+            { t: "09:20", label: "9:20 am" },
+            { t: "10:00", label: "10:00 am" },
+            { t: "10:40", label: "10:40 am" },
+            { t: "11:20", label: "11:20 am" },
+            { t: "12:00", label: "12:00 nn" },
+            { t: "12:40", label: "12:40 pm" },
+            { t: "13:20", label: "1:20 pm" },
+            { t: "14:00", label: "2:00 pm" },
+            { t: "14:40", label: "2:40 pm" },
+            { t: "15:20", label: "3:20 pm" },
+            { t: "16:00", label: "4:00 pm" },
+            { t: "16:40", label: "4:40 pm" },
+            { t: "17:20", label: "5:20 pm" },
+            { t: "18:00", label: "6:00 pm" },
+            { t: "18:40", label: "6:40 pm" },
+            { t: "19:20", label: "7:20 pm" },
+            { t: "20:00", label: "8:00 pm" },
+            { t: "20:40", label: "8:40 pm" },
+            { t: "21:20", label: "9:20 pm" },
+            { t: "22:00", label: "10:00 pm" },
+            { t: "22:50", label: "10:50 pm" },
+            { t: "23:30", label: "11:30 pm" }
+        ]
+    };
+
+    // 3. 橫水渡：長洲 ⇄ 梅窩 (2026年10月26日起臨時調整)
+    const scheduleCCMuiWo = {
+        ccToMuiWo_All: [
+            { t: "06:00", label: "06:00" },
+            { t: "06:35", label: "06:35" },
+            { t: "08:45", label: "08:45" },
+            { t: "10:50", label: "10:50" },
+            { t: "12:45", label: "12:45" },
+            { t: "14:45", label: "14:45" },
+            { t: "16:50", label: "16:50" },
+            { t: "18:45", label: "18:45" },
+            { t: "21:00", label: "21:00" },
+            { t: "22:50", label: "22:50" }
+        ],
+        muiWoToCC_MonSat: [
+            { t: "06:00", label: "06:00" },
+            { t: "07:55", label: "07:55" },
+            { t: "10:10", label: "10:10" },
+            { t: "12:15", label: "12:15" },
+            { t: "14:00", label: "14:00", note: "一至六" },
+            { t: "16:00", label: "16:00", note: "一至六" },
+            { t: "17:20", label: "17:20", only: "WEEKDAY", note: "只限一至五 (公假除外)" },
+            { t: "18:20", label: "18:20" },
+            { t: "20:10", label: "20:10" },
+            { t: "22:20", label: "22:20" }
+        ],
+        muiWoToCC_Holiday: [
+            { t: "06:00", label: "06:00" },
+            { t: "07:55", label: "07:55" },
+            { t: "10:10", label: "10:10" },
+            { t: "12:15", label: "12:15" },
+            { t: "14:05", label: "14:05", note: "日及公假" },
+            { t: "16:05", label: "16:05", note: "日及公假" },
+            { t: "18:20", label: "18:20" },
+            { t: "20:10", label: "20:10" },
+            { t: "22:20", label: "22:20" }
+        ]
+    };
+
+    // ================= 狀態管理 =================
+    let currentRoute = 'CENTRAL_CC'; // 'CENTRAL_CC', 'CENTRAL_MW', 'CC_MUIWO'
+    let isReversed = false;
+    let currentDayType = 'WEEKDAY';  // 'WEEKDAY', 'SAT', 'HOLIDAY'
+    let currentPeriod = 'ALL';       // 'ALL', 'AM', 'PM', 'NIGHT'
+    let hidePast = false;
+
+    window.onload = () => {
+        const day = new Date().getDay();
+        if (day === 0) currentDayType = 'HOLIDAY';
+        else if (day === 6) currentDayType = 'SAT';
+        else currentDayType = 'WEEKDAY';
+
+        updateDayButtonsUI();
+        renderAll();
+        setInterval(tickClock, 1000);
+    };
+
+    function tickClock() {
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2, '0');
+        const mm = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('liveClock').innerText = `${hh}:${mm}:${ss}`;
+        updateRadarAndHighlights();
+    }
+
+    function switchRoute(route) {
+        currentRoute = route;
+        isReversed = false;
+        document.getElementById('tabRouteCC').classList.toggle('active', route === 'CENTRAL_CC');
+        document.getElementById('tabRouteCMW').classList.toggle('active', route === 'CENTRAL_MW');
+        document.getElementById('tabRouteMW').classList.toggle('active', route === 'CC_MUIWO');
+
+        const notes = {
+            'CENTRAL_CC': '中環⇄長洲 (2026年4月1日起生效)',
+            'CENTRAL_MW': '中環⇄梅窩 高速船 (2026年8月10日起生效)',
+            'CC_MUIWO': '橫水渡 長洲⇄梅窩 (2026年10月26日起臨時調整)'
+        };
+        document.getElementById('effectiveNote').innerText = notes[route];
+        renderAll();
+    }
+
+    function swapDirection() {
+        isReversed = !isReversed;
+        renderAll();
+    }
+
+    function setDayType(type) {
+        currentDayType = type;
+        updateDayButtonsUI();
+        renderAll();
+    }
+
+    function updateDayButtonsUI() {
+        document.getElementById('dayBtnWeekday').classList.toggle('active', currentDayType === 'WEEKDAY');
+        document.getElementById('dayBtnSat').classList.toggle('active', currentDayType === 'SAT');
+        document.getElementById('dayBtnHoliday').classList.toggle('active', currentDayType === 'HOLIDAY');
+    }
+
+    function setPeriod(period, btnEl) {
+        currentPeriod = period;
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        btnEl.classList.add('active');
+        renderAll();
+    }
+
+    function toggleShowPast() {
+        hidePast = !hidePast;
+        document.getElementById('togglePastBtn').innerText = hidePast ? '👁️ 顯示全部班次' : '👁️ 隱藏已過班次';
+        renderAll();
+    }
+
+    function getActiveScheduleList() {
+        let rawList = [];
+        if (currentRoute === 'CENTRAL_CC') {
+            if (!isReversed) {
+                rawList = currentDayType === 'HOLIDAY'
+                    ? scheduleCentralCC.centralToCC_Holiday
+                    : scheduleCentralCC.centralToCC_MonSat;
+            } else {
+                rawList = currentDayType === 'HOLIDAY'
+                    ? scheduleCentralCC.ccToCentral_Holiday
+                    : scheduleCentralCC.ccToCentral_MonSat;
+            }
+        } else if (currentRoute === 'CENTRAL_MW') {
+            if (!isReversed) {
+                rawList = currentDayType === 'HOLIDAY'
+                    ? scheduleCentralMW.centralToMW_Holiday
+                    : scheduleCentralMW.centralToMW_MonSat;
+            } else {
+                rawList = currentDayType === 'HOLIDAY'
+                    ? scheduleCentralMW.mwToCentral_Holiday
+                    : scheduleCentralMW.mwToCentral_MonSat;
+            }
+        } else {
+            if (!isReversed) {
+                rawList = scheduleCCMuiWo.ccToMuiWo_All;
+            } else {
+                rawList = currentDayType === 'HOLIDAY'
+                    ? scheduleCCMuiWo.muiWoToCC_Holiday
+                    : scheduleCCMuiWo.muiWoToCC_MonSat;
+            }
+        }
+
+        return rawList.filter(item => {
+            if (item.only === 'SAT' && currentDayType !== 'SAT') return false;
+            if (item.only === 'WEEKDAY' && currentDayType !== 'WEEKDAY') return false;
+            return true;
+        });
+    }
+
+    function toMinutes(item) {
+        const [h, m] = item.t.split(':').map(Number);
+        if (item.nextDayMidnight) return 24 * 60 + m;
+        return h * 60 + m;
+    }
+
+    function renderAll() {
+        let fromPort = '', toPort = '';
+        if (currentRoute === 'CENTRAL_CC') {
+            fromPort = isReversed ? '長洲' : '中環 (5號碼頭)';
+            toPort = isReversed ? '中環 (5號碼頭)' : '長洲';
+        } else if (currentRoute === 'CENTRAL_MW') {
+            fromPort = isReversed ? '梅窩' : '中環 (6號碼頭)';
+            toPort = isReversed ? '中環 (6號碼頭)' : '梅窩';
+        } else {
+            fromPort = isReversed ? '梅窩' : '長洲';
+            toPort = isReversed ? '長洲' : '梅窩';
+        }
+        document.getElementById('fromPortText').innerText = fromPort;
+        document.getElementById('toPortText').innerText = toPort;
+        document.getElementById('radarRouteLabel').innerText = `由 ${fromPort} 開往 ${toPort}`;
+
+        renderFareSection();
+        updateRadarAndHighlights();
+    }
+
+    function updateRadarAndHighlights() {
+        const list = getActiveScheduleList();
+        const now = new Date();
+        const nowMinutes = now.getHours() * 60 + now.getMinutes();
+        const nowSeconds = now.getSeconds();
+
+        let nextIndex = list.findIndex(item => toMinutes(item) > nowMinutes);
+        if (nextIndex === -1 && list.length > 0) {
+            nextIndex = 0;
+        }
+
+        const nextItem = list[nextIndex];
+        if (nextItem) {
+            let diffMins = toMinutes(nextItem) - nowMinutes;
+            if (diffMins <= 0) diffMins += 24 * 60;
+
+            const remMins = diffMins - 1;
+            const remSecs = 60 - nowSeconds;
+
+            document.getElementById('nextSailTime').innerText = nextItem.t;
+            document.getElementById('nextSailSub').innerText = `${nextItem.label}${nextItem.note ? ' · ' + nextItem.note : ''}`;
+
+            if (remMins >= 60) {
+                const hrs = Math.floor(remMins / 60);
+                const mins = remMins % 60;
+                document.getElementById('nextCountdown').innerText = `${hrs}小時 ${mins}分`;
+            } else {
+                document.getElementById('nextCountdown').innerText = `${remMins}分 ${String(remSecs).padStart(2, '0')}秒`;
+            }
+        }
+
+        const subBox = document.getElementById('subsequentList');
+        subBox.innerHTML = '';
+        for (let i = 1; i <= 3; i++) {
+            const idx = (nextIndex + i) % list.length;
+            if (list[idx]) {
+                const span = document.createElement('span');
+                span.className = 'upcoming-pill';
+                span.innerText = list[idx].t;
+                subBox.appendChild(span);
+            }
+        }
+
+        const grid = document.getElementById('timeGrid');
+        grid.innerHTML = '';
+
+        list.forEach((item, idx) => {
+            const mins = toMinutes(item);
+            const isPast = mins <= nowMinutes;
+            const isNext = idx === nextIndex;
+
+            if (hidePast && isPast && !isNext) return;
+
+            const [h] = item.t.split(':').map(Number);
+            if (currentPeriod === 'AM' && h >= 12 && !item.nextDayMidnight) return;
+            if (currentPeriod === 'PM' && (h < 12 || h >= 18)) return;
+            if (currentPeriod === 'NIGHT' && h < 18 && !item.nextDayMidnight) return;
+
+            const cell = document.createElement('div');
+            cell.className = `time-cell ${isPast ? 'past' : ''} ${isNext ? 'next-highlight' : ''}`;
+
+            let tagHtml = '';
+            if (isNext) {
+                tagHtml = `<span class="t-tag next-tag">下一班</span>`;
+            } else if (item.pier5) {
+                tagHtml = `<span class="t-tag pier5-tag">○ 5號碼頭開</span>`;
+            } else if (item.only === 'SAT') {
+                tagHtml = `<span class="t-tag sat-only">只限週六</span>`;
+            } else if (item.only === 'WEEKDAY') {
+                tagHtml = `<span class="t-tag monfri-only">只限一至五</span>`;
+            } else if (item.note) {
+                tagHtml = `<span class="t-sub">${item.note}</span>`;
+            }
+
+            cell.innerHTML = `
+                <span class="t-main">${item.t}</span>
+                <span class="t-sub">${item.label}</span>
+                ${tagHtml}
+            `;
+            grid.appendChild(cell);
+        });
+    }
+
+    function renderFareSection() {
+        const box = document.getElementById('fareSection');
+        if (currentRoute === 'CENTRAL_CC') {
+            box.innerHTML = `
+                <div class="fare-title">
+                    <span>💰 中環 ⇄ 長洲 船費表</span>
+                    <span style="font-size:11px; color:var(--text-muted);">普通渡輪豪華位及高速船設冷氣</span>
+                </div>
+                <table class="fare-table">
+                    <thead>
+                        <tr>
+                            <th>船種 / 客艙</th>
+                            <th>星期一至六<br>(成人 / 特惠)</th>
+                            <th>週日及公假<br>(成人 / 特惠)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>普通渡輪 (普通位)</td>
+                            <td>$16.7 / $8.3</td>
+                            <td>$24.8 / $12.4</td>
+                        </tr>
+                        <tr>
+                            <td>普通渡輪 (豪華位)</td>
+                            <td>$26.1 / $13.0</td>
+                            <td>$38.0 / $19.0</td>
+                        </tr>
+                        <tr>
+                            <td>高速船</td>
+                            <td>$32.9 / $16.4</td>
+                            <td>$47.6 / $23.8</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="fare-note">
+                    • <strong>月票</strong>：$626.8 ｜ <strong>學生月票</strong>：$438.7<br>
+                    • <strong>多程票</strong>：6程 $93.4 ｜ 12程 $183.7 ｜ 20程 $306.2<br>
+                    • 上列時間閘機將會關閉（船票提早售罄除外）。
+                </div>
+            `;
+        } else if (currentRoute === 'CENTRAL_MW') {
+            box.innerHTML = `
+                <div class="fare-title">
+                    <span>💰 中環 ⇄ 梅窩 船費表 (高速船)</span>
+                    <span style="font-size:11px; color:var(--text-muted);">船隻一律提供冷氣設備</span>
+                </div>
+                <table class="fare-table">
+                    <thead>
+                        <tr>
+                            <th>船種</th>
+                            <th>星期一至六<br>(成人 / 特惠)</th>
+                            <th>週日及公假<br>(成人 / 特惠)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>高速船 (Fast Ferry)</td>
+                            <td><strong>$33.5</strong> / <strong>$16.7</strong></td>
+                            <td><strong>$48.5</strong> / <strong>$24.2</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="fare-note">
+                    • <strong>月票</strong>：$652.8 ｜ <strong>學生月票</strong>：$456.8<br>
+                    • <strong>多程票</strong>：12程 $213.5 ｜ 20程 $355.8<br>
+                    • <strong>○ 標記班次 (3:00 am)</strong>：由中環 5 號碼頭開出。<br>
+                    • 上列時間閘機將會關閉（船票提早售罄除外）。
+                </div>
+            `;
+        } else {
+            box.innerHTML = `
+                <div class="fare-title">
+                    <span>💰 橫水渡 (長洲 ⇄ 梅窩) 船費表</span>
+                    <span style="font-size:11px; color:var(--text-muted);">單程收費</span>
+                </div>
+                <table class="fare-table">
+                    <thead>
+                        <tr>
+                            <th>票種</th>
+                            <th>成人</th>
+                            <th>特惠 (長者/小童/殘疾)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>橫水渡單程</td>
+                            <td><strong>$16.3</strong></td>
+                            <td><strong>$8.1</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="fare-note">
+                    • 梅窩開往長洲之 17:20 班次只限星期一至五（公眾假期除外）行走。
+                </div>
+            `;
+        }
+    }
+</script>
+
+</body>
+</html>
